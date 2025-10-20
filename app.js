@@ -69,7 +69,9 @@ app.use(session(sessionOptions));
 
 
 
-
+app.get('/', (req, res) => {
+  res.redirect('/listings');
+});
 
 
 app.use(flash());
