@@ -10,15 +10,14 @@
        
         flex-wrap: nowrap;
        
-        gap: 1rem;
       }
 
       
       #filters-container {
         flex: 1;
-       
-        overflow-x: auto;
         
+        overflow-x: auto;
+        justify-content: space-between;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
        
@@ -33,7 +32,7 @@
 
       .filter {
         flex: 0 0 auto;
-       
+        margin-right: auto;
         text-align: center;
         opacity: 0.8;
         transition: opacity 0.3s ease-in-out;
@@ -105,6 +104,13 @@
         z-index: 9999;
        
       }
+      .filter a{
+        margin-top: 1.3rem;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+
 
       @media (max-width: 768px) {
         .tax-toggle {
@@ -134,7 +140,7 @@
 
       <div class="col-12">
         <div class="filters-row d-flex align-items-center">
-          <div id="filters-container" class="flex-grow-1 me-3">
+          <div id="filters-container" class="flex-grow-1 ">
             <div id="filters">
               <div class="filter">
                 <a href="/listings/filter/Rooms">
