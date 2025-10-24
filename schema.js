@@ -9,6 +9,7 @@ module.exports.listingSchema = joi
         location: joi.string().required(),
         country: joi.string().required(),
         price: joi.number().required().min(0),
+        maxGuests: joi.number().integer().min(1).required(),
         image: joi.string().allow("", null),
         categories: joi.alternatives().try(
           joi.string(),

@@ -32,62 +32,42 @@ module.exports.showListing = wrapAsync(async (req, res) => {
   }
 });
 
-module.exports.addNewListingToDb = wrapAsync(async (req, res, next) => {
-  const { listing } = req.body;
-  if (!listing) {
-    req.flash("error", "Send valid data for listing");
-    return res.redirect(req.get("referer") || "/listings");
-  }
+module.exports.addNewListingToDb =wrapAsync( async (req, res) => {
+  try {
+    const { listing } = req.body; 
 
-  const newListing = new Listing(listing);
-  newListing.owner = req.user._id;
+    // Parse numeric fields
+    if (listing.price) listing.price = Number(listing.price);
+    listing.maxGuests = listing.maxGuests ? Number(listing.maxGuests) : 1;
 
-  // Parse maxGuests to number
-  if (listing.maxGuests) {
-    newListing.maxGuests = parseInt(listing.maxGuests);
-  }
+    // Handle image upload
+    if (req.file) {
+      listing.image = { url: req.file.path, filename: req.file.filename };
+    }
 
-  // Handle categories
-  if (listing.categories) {
-    newListing.categories = Array.isArray(listing.categories)
-      ? listing.categories
-      : [listing.categories];
-  }
-
-  // Handle image
-  if (req.file) {
-    newListing.image = { url: req.file.path, filename: req.file.filename };
-  }
-
-  // Forward Geocoding
-  if (newListing.location) {
-    try {
+    // Forward Geocoding
+    if (listing.location) {
       const response = await client.geocode({
-        params: { address: newListing.location, key: GOOGLE_MAPS_KEY },
+        params: { address: listing.location, key: GOOGLE_MAPS_KEY },
       });
-
       if (response.data.results.length > 0) {
         const loc = response.data.results[0].geometry.location;
-        newListing.geometry = {
-          type: "Point",
-          coordinates: [loc.lng, loc.lat],
-        };
-      } else {
-        req.flash("error", "Invalid location! Please enter a correct address.");
-        return res.redirect(req.get("referer") || "/listings");
+        listing.geometry = { type: "Point", coordinates: [loc.lng, loc.lat] };
       }
-    } catch (err) {
-      req.flash(
-        "error",
-        "Error while fetching location data. Please try again later."
-      );
-      return res.redirect(req.get("referer") || "/listings");
     }
-  }
 
-  await newListing.save();
-  req.flash("success", "New Listing Created!");
-  res.redirect("/listings");
+    listing.owner = req.user._id;
+
+    const newListing = new Listing(listing);
+    await newListing.save();
+
+    req.flash("success", "New Listing Created!");
+    res.redirect("/listings");
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Error creating listing!");
+    res.redirect("/listings");
+  }
 });
 
 module.exports.renderEditListingForm = wrapAsync(async (req, res) => {
@@ -144,20 +124,21 @@ module.exports.updateListingInDb = wrapAsync(async (req, res) => {
         };
       } else {
         req.flash("error", "Invalid location! Please enter a correct address.");
-        return res.redirect(req.get("referer") || `/listings/${id}`); // stop execution
+        return res.redirect(req.get("referer") || `/listings/${id}`);
       }
     } catch (err) {
       req.flash(
         "error",
         "Error while fetching location data. Please try again later."
       );
-      return res.redirect(req.get("referer") || `/listings/${id}`); // stop execution
+      return res.redirect(req.get("referer") || `/listings/${id}`); 
     }
   }
 
   await newListing.save();
   req.flash("success", "Listing Updated Successfully!");
   res.redirect(`/listings/${id}`);
+
 });
 
 module.exports.filter = wrapAsync(async (req, res, next) => {

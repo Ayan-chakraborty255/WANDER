@@ -15,11 +15,12 @@ router
   .route("/")
   .get(listingControllers.index)
   .post(
-    isLoggedIn,
-    validateListing,
-    upload.single("listing[image]"),
-    listingControllers.addNewListingToDb
-  );
+  isLoggedIn,
+  upload.single("listing[image]"), 
+  validateListing,               
+  listingControllers.addNewListingToDb
+);
+
 
 // New listing form
 router.get("/new", isLoggedIn, listingControllers.renderNewListingForm);
