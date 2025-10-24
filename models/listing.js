@@ -17,6 +17,11 @@ const listingSchema = new Schema({
     price: Number,
     location: String,
     country: String,
+    maxGuests: {               // maximum guests allowed
+        type: Number,
+        required: true,
+        default: 1,
+    },
     reviews:[{
         type:Schema.Types.ObjectId,
         ref:"Review"

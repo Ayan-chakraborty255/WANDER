@@ -19,6 +19,7 @@ const MongoStore = require('connect-mongo');
 
 
 
+
 app.use(express.static("public"));
 
 app.use(express.json());
@@ -32,6 +33,7 @@ app.use(express.static(path.join(__dirname,"/public/js")));
 const listingRouter=require("./routes/listings.js");
 const reviewRouter=require("./routes/reviews.js");
 const userRouter=require("./routes/users.js");
+const bookingRouter=require("./routes/booking.js");
 
 
 async function main() {
@@ -102,6 +104,7 @@ app.use((req,res,next)=>{
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
+app.use("/listings/:id/book",bookingRouter);
 
 
 

@@ -1,0 +1,119 @@
+<% layout("/layouts/boilerplate") %>
+<style>
+  .booking-form-container {
+    max-width: 800px;
+    margin: 50px auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .booking-form h3 {
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+  }
+
+  .date-input,
+  .form-control {
+    border-radius: 12px;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    transition: all 0.2s;
+  }
+
+  .date-input:focus,
+  .form-control:focus {
+    border-color: #ff4d4f;
+    box-shadow: 0 0 8px rgba(255, 77, 79, 0.2);
+    outline: none;
+  }
+
+  .btn-primary {
+    background-color: #ff4d4f;
+    border: none;
+    font-weight: 500;
+    border-radius: 12px;
+    padding: 12px 0;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover {
+    background-color: #e84345;
+  }
+</style>
+
+<body>
+  <div class="booking-form-container">
+    <form
+      action="/listings/<%= listing._id %>/book/payment"
+      method="POST"
+      class="booking-form p-4"
+    >
+      <h3 class="mb-4">Book Your Stay</h3>
+
+      <div class="row g-3">
+        <!-- Check-in / Check-out -->
+        <div class="col-md-6">
+          <label for="dateRange" class="form-label">Select Dates</label>
+          <input
+            id="dateRange"
+            class="form-control date-input"
+            placeholder="Select dates"
+            required
+          />
+          <input type="hidden" id="checkInHidden" name="checkIn" />
+          <input type="hidden" id="checkOutHidden" name="checkOut" />
+        </div>
+
+        <!-- Guests -->
+        <div class="col-md-3">
+          <label for="adults" class="form-label">Adults</label>
+          <input
+            type="number"
+            class="form-control"
+            id="adults"
+            name="adults"
+            min="1"
+            value="1"
+            required
+          />
+        </div>
+        <div class="col-md-3">
+          <label for="children" class="form-label">Children</label>
+          <input
+            type="number"
+            class="form-control"
+            id="children"
+            name="children"
+            min="0"
+            value="0"
+          />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary mt-4 w-100">
+        Check Availability
+      </button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      flatpickr("#dateRange", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        onChange: function (selectedDates) {
+          if (selectedDates.length === 2) {
+            document.getElementById("checkInHidden").value = selectedDates[0]
+              .toISOString()
+              .split("T")[0];
+            document.getElementById("checkOutHidden").value = selectedDates[1]
+              .toISOString()
+              .split("T")[0];
+          }
+        },
+      });
+    });
+  </script>
+</body>
