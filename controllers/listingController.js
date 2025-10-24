@@ -90,7 +90,6 @@ module.exports.addNewListingToDb = wrapAsync(async (req, res, next) => {
   res.redirect("/listings");
 });
 
-
 module.exports.renderEditListingForm = wrapAsync(async (req, res) => {
   let { id } = req.params;
   const listing = await Listing.findById(id);
@@ -109,13 +108,15 @@ module.exports.renderEditListingForm = wrapAsync(async (req, res) => {
 module.exports.updateListingInDb = wrapAsync(async (req, res) => {
   let { id } = req.params;
   const newListing = await Listing.findById(id);
-  const { title, description, price, location, country, maxGuests } = req.body.listing;
-  if (title) listing.title = title;
-  if (description) listing.description = description;
-  if (price) listing.price = price;
-  if (location) listing.location = location;
-  if (country) listing.country = country;
-  if (maxGuests) listing.maxGuests = parseInt(maxGuests);
+  const { title, description, price, location, country, maxGuests } =
+    req.body.listing;
+
+  if (title) newListing.title = title;
+  if (description) newListing.description = description;
+  if (price) newListing.price = price;
+  if (location) newListing.location = location;
+  if (country) newListing.country = country;
+  if (maxGuests) newListing.maxGuests = parseInt(maxGuests);
   //for category
   if (req.body.listing.categories && req.body.listing.categories.length > 0) {
     newListing.categories = Array.isArray(req.body.listing.categories)
@@ -123,8 +124,6 @@ module.exports.updateListingInDb = wrapAsync(async (req, res) => {
       : [req.body.listing.categories];
   }
 
-
-  
   if (req.file) {
     let url = req.file.path;
     let filename = req.file.filename;
@@ -161,8 +160,7 @@ module.exports.updateListingInDb = wrapAsync(async (req, res) => {
   res.redirect(`/listings/${id}`);
 });
 
-
-module.exports.filter =wrapAsync(async (req, res, next) => {
+module.exports.filter = wrapAsync(async (req, res, next) => {
   const { id } = req.params;
 
   // Find all listings that include the selected category
@@ -177,41 +175,32 @@ module.exports.filter =wrapAsync(async (req, res, next) => {
   }
 });
 
-
-
 module.exports.search = async (req, res) => {
   try {
     let input = req.query.q;
 
-    
     if (!input || input.trim() === "") {
       req.flash("error", "Please enter a search query!");
       return res.redirect("/listings");
     }
 
-    
     input = input.trim().replace(/\s+/g, " ");
 
-    
     const element = input
       .split(" ")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
 
-  
     const fields = ["title", "categories", "country", "location"];
 
     let allListings = [];
 
-  
     const regexPattern = element.replace(/\s+/g, "[-\\s]*");
 
-    
     for (const field of fields) {
       let query = {};
 
       if (field === "categories") {
-        
         query[field] = { $elemMatch: { $regex: regexPattern, $options: "i" } };
       } else {
         query[field] = { $regex: regexPattern, $options: "i" };
@@ -220,7 +209,9 @@ module.exports.search = async (req, res) => {
       allListings = await Listing.find(query).sort({ _id: -1 });
 
       if (allListings.length > 0) {
-        res.locals.success = `Listings found by ${field.charAt(0).toUpperCase() + field.slice(1)}!`;
+        res.locals.success = `Listings found by ${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        }!`;
         return res.render("listings/index.ejs", { allListings });
       }
     }
@@ -228,32 +219,23 @@ module.exports.search = async (req, res) => {
     //Check if input is a number → search by price
     const intValue = parseInt(element, 10);
     if (!isNaN(intValue)) {
-      allListings = await Listing.find({ price: { $lte: intValue } }).sort({ price: 1 });
+      allListings = await Listing.find({ price: { $lte: intValue } }).sort({
+        price: 1,
+      });
       if (allListings.length > 0) {
         res.locals.success = `Listings with price ≤ Rs ${intValue}!`;
         return res.render("listings/index.ejs", { allListings });
       }
     }
 
-  
     req.flash("error", "No listings found matching your search!");
     return res.redirect("/listings");
-
   } catch (err) {
     console.error("Search error:", err);
     req.flash("error", "Something went wrong during search!");
     return res.redirect("/listings");
   }
 };
-
-
-
-
-
-
-
-
-
 
 module.exports.destroyListing = wrapAsync(async (req, res) => {
   let { id } = req.params;
