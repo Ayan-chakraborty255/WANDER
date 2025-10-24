@@ -33,27 +33,33 @@ module.exports.showListing = wrapAsync(async (req, res) => {
 });
 
 module.exports.addNewListingToDb = wrapAsync(async (req, res, next) => {
-  let url = req.file.path;
-  let filename = req.file.filename;
-  // if (!req.body.listing) {
-  //   throw new ExpressError(400, "Send valid data for listing");
-  // }
-  const newListing = new Listing(req.body.listing);
-  newListing.owner = req.user._id;
-  // if (!newListing.title) {
-  //   throw new ExpressError(400, "Title is missing!");
-  // }
-  // if (!newListing.description) {
-  //   throw new ExpressError(400, "Description is missing!");
-  // }
-  // if (!newListing.location) {
-  //   throw new ExpressError(400, "Location is missing!");
-  // }
-  newListing.image = { url, filename };
-  if (listing.categories && !Array.isArray(listing.categories)) {
-    newListing.categories = [listing.categories];
+  const { listing } = req.body;
+  if (!listing) {
+    req.flash("error", "Send valid data for listing");
+    return res.redirect(req.get("referer") || "/listings");
   }
-  // --- Forward Geocoding ---
+
+  const newListing = new Listing(listing);
+  newListing.owner = req.user._id;
+
+  // Parse maxGuests to number
+  if (listing.maxGuests) {
+    newListing.maxGuests = parseInt(listing.maxGuests);
+  }
+
+  // Handle categories
+  if (listing.categories) {
+    newListing.categories = Array.isArray(listing.categories)
+      ? listing.categories
+      : [listing.categories];
+  }
+
+  // Handle image
+  if (req.file) {
+    newListing.image = { url: req.file.path, filename: req.file.filename };
+  }
+
+  // Forward Geocoding
   if (newListing.location) {
     try {
       const response = await client.geocode({
@@ -68,14 +74,14 @@ module.exports.addNewListingToDb = wrapAsync(async (req, res, next) => {
         };
       } else {
         req.flash("error", "Invalid location! Please enter a correct address.");
-        return res.redirect(req.get("referer") || "/listings"); // stop execution
+        return res.redirect(req.get("referer") || "/listings");
       }
     } catch (err) {
       req.flash(
         "error",
         "Error while fetching location data. Please try again later."
       );
-      return res.redirect(req.get("referer") || "/listings"); // stop execution
+      return res.redirect(req.get("referer") || "/listings");
     }
   }
 
@@ -83,6 +89,7 @@ module.exports.addNewListingToDb = wrapAsync(async (req, res, next) => {
   req.flash("success", "New Listing Created!");
   res.redirect("/listings");
 });
+
 
 module.exports.renderEditListingForm = wrapAsync(async (req, res) => {
   let { id } = req.params;
@@ -102,7 +109,13 @@ module.exports.renderEditListingForm = wrapAsync(async (req, res) => {
 module.exports.updateListingInDb = wrapAsync(async (req, res) => {
   let { id } = req.params;
   const newListing = await Listing.findById(id);
-  Object.assign(newListing, req.body.listing);
+  const { title, description, price, location, country, maxGuests } = req.body.listing;
+  if (title) listing.title = title;
+  if (description) listing.description = description;
+  if (price) listing.price = price;
+  if (location) listing.location = location;
+  if (country) listing.country = country;
+  if (maxGuests) listing.maxGuests = parseInt(maxGuests);
   //for category
   if (req.body.listing.categories && req.body.listing.categories.length > 0) {
     newListing.categories = Array.isArray(req.body.listing.categories)
